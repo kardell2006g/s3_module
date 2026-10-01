@@ -65,14 +65,9 @@ resource "aws_cloudwatch_event_rule" "s3_data_events" {
     "detail-type": ["AWS API Call via CloudTrail"]
   })
 }
-  versioning_configuration {
-    status     = "Enabled"
-    mfa_delete = "Enabled" # This will be ignored by Terraform; must be set manually
-  }
 
 resource "aws_s3_bucket" "bucket" {
   bucket = local.bucket_name
-
   tags = {
     Workspace = local.sanitized_workspace_name
     Email     = var.email
@@ -81,7 +76,6 @@ resource "aws_s3_bucket" "bucket" {
 
 resource "aws_s3_bucket_ownership_controls" "ownership" {
   bucket = aws_s3_bucket.bucket.id
-
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -94,6 +88,7 @@ resource "aws_s3_bucket_versioning" "this" {
     mfa_delete = "Enabled" # Must be enabled manually via CLI
   }
 }
+
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
   bucket = aws_s3_bucket.bucket.id
 
