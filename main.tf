@@ -79,11 +79,6 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = var.bucket_acl
-}
-
 resource "aws_s3_bucket_ownership_controls" "ownership" {
   bucket = aws_s3_bucket.bucket.id
 
@@ -92,6 +87,13 @@ resource "aws_s3_bucket_ownership_controls" "ownership" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "this" {
+  bucket = aws_s3_bucket.bucket.id
+  versioning_configuration {
+    status     = "Enabled"
+    mfa_delete = "Enabled" # Must be enabled manually via CLI
+  }
+}
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
   bucket = aws_s3_bucket.bucket.id
 
