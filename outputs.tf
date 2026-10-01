@@ -12,3 +12,20 @@ output "kms_key_arn" {
   description = "The ARN of the KMS key used for S3 bucket encryption"
   value       = aws_kms_key.bucket_key.arn
 }
+
+output "cloudtrail_log_bucket" {
+  description = "The S3 bucket where CloudTrail logs are delivered"
+  value       = aws_cloudtrail.s3_trail.s3_bucket_name
+}
+
+output "mfa_delete_manual_step" {
+  description = "Manual step required to enable MFA Delete on the S3 bucket"
+  value = <<EOT
+Terraform cannot enable MFA Delete due to AWS API limitations.
+To enable MFA Delete, use the AWS CLI after bucket creation:
+
+aws s3api put-bucket-versioning --bucket ${aws_s3_bucket.bucket.bucket} --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa "SERIAL_NUMBER MFA_CODE"
+
+Replace SERIAL_NUMBER with your MFA device serial and MFA_CODE with your current code.
+EOT
+}
