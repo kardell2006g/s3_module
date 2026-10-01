@@ -103,7 +103,7 @@ resource "aws_s3_bucket_versioning" "this" {
   bucket = aws_s3_bucket.bucket.id
   versioning_configuration {
     status     = "Enabled"
-    mfa_delete = "Enabled" # Must be enabled manually via CLI
+   # mfa_delete = "Enabled" # Must be enabled manually via CLI
   }
 }
 
