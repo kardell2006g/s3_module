@@ -61,7 +61,7 @@ resource "aws_s3_bucket_policy" "combined" {
 }
 
 resource "aws_cloudtrail" "s3_trail" {
-  name                          = "s3-object-logging"-"${random_id.suffix.hex}"
+  name                          = "s3-object-logging-${random_id.suffix.hex}"
   s3_bucket_name                = aws_s3_bucket.bucket.id
   include_global_service_events = true
   is_multi_region_trail         = true
