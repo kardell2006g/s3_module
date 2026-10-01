@@ -18,6 +18,58 @@ resource "aws_kms_key" "bucket_key" {
   enable_key_rotation     = true
 }
 
+resource "aws_s3_bucket_policy" "require_ssl" {
+  bucket = aws_s3_bucket.bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyUnEncryptedTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [
+          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "s3_trail" {
+  name                          = "s3-object-logging"
+  s3_bucket_name                = aws_s3_bucket.bucket.id
+  include_global_service_events = true
+  is_multi_region_trail         = true
+  enable_logging                = true
+}
+
+resource "aws_s3_bucket_public_access_block" "this" {
+  bucket                  = aws_s3_bucket.bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_cloudwatch_event_rule" "s3_data_events" {
+  name        = "s3-data-events"
+  event_pattern = jsonencode({
+    "source": ["aws.s3"],
+    "detail-type": ["AWS API Call via CloudTrail"]
+  })
+}
+  versioning_configuration {
+    status     = "Enabled"
+    mfa_delete = "Enabled" # This will be ignored by Terraform; must be set manually
+  }
+
 resource "aws_s3_bucket" "bucket" {
   bucket = local.bucket_name
 
@@ -61,6 +113,19 @@ resource "aws_s3_bucket_object" "object" {
   tags = {
     Workspace = local.sanitized_workspace_name
     Email     = var.email
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "expiration" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id     = "expire-objects"
+    status = "Enabled"
+
+    expiration {
+      days = var.target_expiration_days
+    }
   }
 }
 
