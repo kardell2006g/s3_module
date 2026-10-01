@@ -9,20 +9,12 @@ variable "email" {
   type        = string
 }
 
-variable "bucket_acl" {
-  description = "The canned ACL to apply to the S3 bucket"
-  type        = string
+variable "days_deletion" {
+  description = "Days until objects deleted from the S3 bucket"
+  type        = number
   validation {
-    condition = contains([
-      "private",
-      "public-read",
-      "public-read-write",
-      "authenticated-read",
-      "log-delivery-write",
-      "bucket-owner-read",
-      "bucket-owner-full-control",
-      "aws-exec-read"
-    ], var.bucket_acl)
-    error_message = "Invalid ACL. Must be one of: private, public-read, public-read-write, authenticated-read, log-delivery-write, bucket-owner-read, bucket-owner-full-control, aws-exec-read."
+    
+    ],
+    error_message = "Invalid must be a number between 0-365"
   }
 }
