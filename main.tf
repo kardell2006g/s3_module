@@ -32,6 +32,14 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = var.bucket_acl
 }
 
+resource "aws_s3_bucket_ownership_controls" "ownership" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
   bucket = aws_s3_bucket.bucket.id
 
