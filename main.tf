@@ -1,32 +1,3 @@
-variable "aws_region" {
-  description = "AWS region to deploy resources"
-  type        = string
-  default     = "us-east-2"
-}
-
-variable "email" {
-  description = "The email to tag resources with"
-  type        = string
-}
-
-variable "bucket_acl" {
-  description = "The canned ACL to apply to the S3 bucket"
-  type        = string
-  validation {
-    condition = contains([
-      "private",
-      "public-read",
-      "public-read-write",
-      "authenticated-read",
-      "log-delivery-write",
-      "bucket-owner-read",
-      "bucket-owner-full-control",
-      "aws-exec-read"
-    ], var.bucket_acl)
-    error_message = "Invalid ACL. Must be one of: private, public-read, public-read-write, authenticated-read, log-delivery-write, bucket-owner-read, bucket-owner-full-control, aws-exec-read."
-  }
-}
-
 provider "aws" {
   region = var.aws_region
 }
@@ -36,7 +7,7 @@ resource "random_id" "suffix" {
 }
 
 locals {
-  sanitized_workspace_name = regexreplace(terraform.workspace, "[^a-zA-Z0-9-]", "")
+  sanitized_workspace_name = replace(terraform.workspace,"/[^a-zA-Z0-9-]/", "")
   bucket_name              = "${local.sanitized_workspace_name}-${random_id.suffix.hex}"
   object_key               = local.sanitized_workspace_name
 }
@@ -85,10 +56,3 @@ resource "aws_s3_bucket_object" "object" {
   }
 }
 
-output "bucket_name" {
-  value = aws_s3_bucket.bucket.bucket
-}
-
-output "object_key" {
-  value = aws_s3_bucket_object.object.key
-}
