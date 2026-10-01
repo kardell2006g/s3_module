@@ -18,11 +18,14 @@ resource "aws_kms_key" "bucket_key" {
   enable_key_rotation     = true
 }
 
-resource "aws_s3_bucket_policy" "require_ssl" {
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "combined" {
   bucket = aws_s3_bucket.bucket.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # SSL enforcement
       {
         Sid       = "DenyUnEncryptedTransport"
         Effect    = "Deny"
@@ -35,6 +38,21 @@ resource "aws_s3_bucket_policy" "require_ssl" {
         Condition = {
           Bool = {
             "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      # CloudTrail write permission
+      {
+        Sid      = "AWSCloudTrailWrite"
+        Effect   = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
       }
