@@ -9,12 +9,12 @@ variable "email" {
   type        = string
 }
 
-variable "days_deletion" {
-  description = "Days until objects deleted from the S3 bucket"
+variable "target_expiration_days" {
+  description = "Number of days after which objects expire"
   type        = number
+  default     = 30
   validation {
-    
-    ],
-    error_message = "Invalid must be a number between 0-365"
+    condition     = var.target_expiration_days >= 1 && var.target_expiration_days <= 365
+    error_message = "Expiration days must be between 1 and 365."
   }
 }
