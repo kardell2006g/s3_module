@@ -18,3 +18,9 @@ variable "target_expiration_days" {
     error_message = "Expiration days must be between 1 and 365."
   }
 }
+
+variable "cloudtrail_trail_name" {
+  description = "The name of the CloudTrail trail"
+  type        = string
+  default     = "" # Will be set in locals below if not provided
+}
