@@ -6,10 +6,21 @@ resource "random_id" "suffix" {
   byte_length = 4
 }
 
+resource "random_pet" "cloudtrail_name" {
+  length    = 2
+  separator = "-"
+}
+
 locals {
   sanitized_workspace_name = replace(terraform.workspace,"/[^a-zA-Z0-9-]/", "")
   bucket_name              = "${local.sanitized_workspace_name}-${random_id.suffix.hex}"
   object_key               = local.sanitized_workspace_name
+
+ effective_cloudtrail_trail_name = (
+    var.cloudtrail_trail_name != "" ?
+    var.cloudtrail_trail_name :
+    "cloudtrail-${random_pet.cloudtrail_name.id}"
+  )
 }
 
 resource "aws_kms_key" "bucket_key" {
@@ -41,23 +52,55 @@ resource "aws_s3_bucket_policy" "combined" {
           }
         }
       },
-      # CloudTrail write permission
+      resource "aws_s3_bucket_policy" "s3_log_bucket_policy" {
+  bucket = aws_s3_bucket.this.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
-        Sid      = "AWSCloudTrailWrite"
-        Effect   = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:PutObject"
-        Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.this.id}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
           StringEquals = {
-            "s3:x-amz-acl" = "bucket-owner-full-control"
+            "s3:x-amz-acl"  = "bucket-owner-full-control"
+            "aws:SourceArn" = data.aws_cloudtrail.selected.arn
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.this.id}"
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = data.aws_cloudtrail.selected.arn
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.this.id}"
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
           }
         }
       }
     ]
   })
+}
 }
 
 resource "aws_cloudtrail" "s3_trail" {
