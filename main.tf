@@ -107,9 +107,6 @@ resource "aws_cloudtrail" "s3_trail" {
   enable_logging                = true
 }
 
-data "aws_cloudtrail" "selected" {
-  name = aws_cloudtrail.s3_trail.name
-}
 
 resource "aws_s3_bucket_policy" "combined" {
   bucket = aws_s3_bucket.bucket.id
@@ -143,7 +140,7 @@ resource "aws_s3_bucket_policy" "combined" {
         Condition = {
           StringEquals = {
             "s3:x-amz-acl"  = "bucket-owner-full-control"
-            "aws:SourceArn" = data.aws_cloudtrail.selected.arn
+            "aws:SourceArn" = aws_cloudtrail.s3_trail.arn
           }
         }
       },
@@ -157,7 +154,7 @@ resource "aws_s3_bucket_policy" "combined" {
         Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
         Condition = {
           StringEquals = {
-            "aws:SourceArn" = data.aws_cloudtrail.selected.arn
+            "aws:SourceArn" = aws_cloudtrail.s3_trail.arn
           }
         }
       },
