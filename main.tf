@@ -1,13 +1,8 @@
-terraform {
-   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-    # Add other providers as needed
-  }
+provider "aws" {
+  region = var.aws_region
+  version = ">= 5.0"
 }
-
+      
 resource "random_id" "suffix" {
   byte_length = 4
 }
