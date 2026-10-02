@@ -15,7 +15,6 @@ locals {
   sanitized_workspace_name = replace(terraform.workspace,"/[^a-zA-Z0-9-]/", "")
   bucket_name              = "${local.sanitized_workspace_name}-${random_id.suffix.hex}"
   object_key               = local.sanitized_workspace_name
-
   effective_cloudtrail_trail_name = (
     var.cloudtrail_trail_name != "" ?
     var.cloudtrail_trail_name :
@@ -64,7 +63,6 @@ resource "aws_s3_bucket_versioning" "this" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
   bucket = aws_s3_bucket.bucket.id
-
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
@@ -79,7 +77,6 @@ resource "aws_s3_bucket_object" "object" {
   content                = "This is a test object"
   server_side_encryption = "aws:kms"
   kms_key_id             = aws_kms_key.bucket_key.arn
-
   tags = {
     Workspace = local.sanitized_workspace_name
     Email     = var.email
@@ -88,11 +85,9 @@ resource "aws_s3_bucket_object" "object" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "expiration" {
   bucket = aws_s3_bucket.bucket.id
-
   rule {
     id     = "expire-objects"
     status = "Enabled"
-
     expiration {
       days = var.target_expiration_days
     }
@@ -186,9 +181,7 @@ resource "aws_cloudwatch_event_rule" "s3_data_events" {
 
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "${local.sanitized_workspace_name}-logs-${random_id.suffix.hex}"
-  acl    = "log-delivery-write"
   force_destroy = true
-
   tags = {
     Workspace = local.sanitized_workspace_name
     Purpose   = "S3 Access Logs"
