@@ -13,9 +13,12 @@ output "kms_key_arn" {
   value       = aws_kms_key.bucket_key.arn
 }
 
-output "cloudtrail_log_bucket" {
-  description = "The S3 bucket where CloudTrail logs are delivered"
-  value       = aws_cloudtrail.s3_trail.s3_bucket_name
+output "cloudtrail_trail_name" {
+  value = local.effective_cloudtrail_trail_name
+}
+
+output "cloudtrail_arn" {
+  value = data.aws_cloudtrail.selected.arn
 }
 
 output "mfa_delete_manual_step" {
