@@ -126,7 +126,8 @@ resource "aws_s3_bucket_policy" "main_bucket_policy" {
       },
       # CloudTrail PutObject
       {
-        Effect = "Allow"
+        Sid      = "AWSCloudTrailWrite"
+        Effect   = "Allow"
         Principal = {
           Service = "cloudtrail.amazonaws.com"
         }
@@ -134,38 +135,20 @@ resource "aws_s3_bucket_policy" "main_bucket_policy" {
         Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
           StringEquals = {
-            "s3:x-amz-acl"  = "bucket-owner-full-control"
-            # Remove "aws:SourceArn" unless you have a strict multi-trail setup
+            "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
       },
       # CloudTrail GetBucketAcl
       {
-        Effect = "Allow"
+        Sid      = "AWSCloudTrailAclCheck"
+        Effect   = "Allow"
         Principal = {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
         Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
-      },
- {
-        Sid: "DenyUnEncryptedTransport"
-        Effect: "Deny"
-        Principal: "*"
-        Action: "s3:*"
-        Resource: [
-          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}",
-          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/*"
-        ]
-        Condition: {
-          Bool: {
-            "aws:SecureTransport": "false"
-          }
-        }
       }
-    ]
-  })
-}
     ]
   })
 }
@@ -175,34 +158,34 @@ resource "aws_s3_bucket_policy" "log_bucket_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # Log Delivery Write
       {
-        Sid: "AWSLogDeliveryWrite",
-        Effect: "Allow",
-        Principal: {
-          Service: "logging.s3.amazonaws.com"
-        },
-        Action: [
-          "s3:PutObject"
-        ],
-        Resource: "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/access-logs/*",
-        Condition: {
-          StringEquals: {
-            "s3:x-amz-acl": "bucket-owner-full-control"
+        Sid      = "AWSLogDeliveryWrite"
+        Effect   = "Allow"
+        Principal = {
+          Service = "logging.s3.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/access-logs/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
           }
         }
       },
- {
-        Sid: "DenyUnEncryptedTransport"
-        Effect: "Deny"
-        Principal: "*"
-        Action: "s3:*"
-        Resource: [
+      # SSL enforcement
+      {
+        Sid       = "DenyUnEncryptedTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [
           "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}",
           "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/*"
         ]
-        Condition: {
-          Bool: {
-            "aws:SecureTransport": "false"
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
           }
         }
       }
