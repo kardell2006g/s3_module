@@ -18,7 +18,7 @@ output "cloudtrail_trail_name" {
 }
 
 output "cloudtrail_arn" {
-  value = data.aws_cloudtrail.selected.arn
+  value = aws_cloudtrail.s3_trail.arn
 }
 
 output "mfa_delete_manual_step" {
