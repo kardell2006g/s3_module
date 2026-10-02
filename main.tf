@@ -1,6 +1,5 @@
 terraform {
-  required_version = "1.17.0-beta2"
-  required_providers {
+   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = ">= 5.0"
@@ -171,6 +170,23 @@ resource "aws_s3_bucket_policy" "combined" {
         Condition = {
           StringLike = {
             "s3:prefix" = ["AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+          }
+        }
+      },
+#Log Bucket ACL
+{
+        Sid: "AWSLogDeliveryWrite",
+        Effect: "Allow",
+        Principal: {
+          Service: "logging.s3.amazonaws.com"
+        },
+        Action: [
+          "s3:PutObject"
+        ],
+        Resource: "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/access-logs/*",
+        Condition: {
+          StringEquals: {
+            "s3:x-amz-acl": "bucket-owner-full-control"
           }
         }
       }
