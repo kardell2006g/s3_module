@@ -33,6 +33,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket = local.bucket_name
+  force_destroy = true
   tags = {
     Workspace = local.sanitized_workspace_name
     Email     = var.email
