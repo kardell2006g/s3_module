@@ -13,7 +13,7 @@ resource "random_pet" "cloudtrail_name" {
 }
 
 locals {
-  sanitized_workspace_name = replace(terraform.workspace,"/[^a-zA-Z0-9-]/", "")
+  sanitized_workspace_name = replace(terraform.workspace,"/[^a-z0-9-]/", "")
   bucket_name              = "${local.sanitized_workspace_name}-${random_id.suffix.hex}"
   object_key               = local.sanitized_workspace_name
   effective_cloudtrail_trail_name = (
