@@ -183,3 +183,21 @@ resource "aws_cloudwatch_event_rule" "s3_data_events" {
     "detail-type": ["AWS API Call via CloudTrail"]
   })
 }
+
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "${local.sanitized_workspace_name}-logs-${random_id.suffix.hex}"
+  acl    = "log-delivery-write"
+  force_destroy = true
+
+  tags = {
+    Workspace = local.sanitized_workspace_name
+    Purpose   = "S3 Access Logs"
+  }
+}
+
+resource "aws_s3_bucket_logging" "bucket_logging" {
+  bucket        = aws_s3_bucket.bucket.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "access-logs/"
+}
+
