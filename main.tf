@@ -103,8 +103,7 @@ resource "aws_cloudtrail" "s3_trail" {
   enable_logging                = true
 }
 
-
-resource "aws_s3_bucket_policy" "combined" {
+resource "aws_s3_bucket_policy" "main_bucket_policy" {
   bucket = aws_s3_bucket.bucket.id
   policy = jsonencode({
     Version = "2012-10-17"
@@ -136,7 +135,7 @@ resource "aws_s3_bucket_policy" "combined" {
         Condition = {
           StringEquals = {
             "s3:x-amz-acl"  = "bucket-owner-full-control"
-            "aws:SourceArn" = aws_cloudtrail.s3_trail.arn
+            # Remove "aws:SourceArn" unless you have a strict multi-trail setup
           }
         }
       },
@@ -148,28 +147,17 @@ resource "aws_s3_bucket_policy" "combined" {
         }
         Action   = "s3:GetBucketAcl"
         Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
-        Condition = {
-          StringEquals = {
-            "aws:SourceArn" = aws_cloudtrail.s3_trail.arn
-          }
-        }
-      },
-      # CloudTrail ListBucket
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_policy" "log_bucket_policy" {
+  bucket = aws_s3_bucket.log_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudtrail.amazonaws.com"
-        }
-        Action   = "s3:ListBucket"
-        Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
-        Condition = {
-          StringLike = {
-            "s3:prefix" = ["AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
-          }
-        }
-      },
-#Log Bucket ACL
-{
         Sid: "AWSLogDeliveryWrite",
         Effect: "Allow",
         Principal: {
