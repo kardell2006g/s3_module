@@ -1,5 +1,12 @@
-provider "aws" {
-  region = var.aws_region
+terraform {
+  required_version = "1.17.0-beta2"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.0"
+    }
+    # Add other providers as needed
+  }
 }
 
 resource "random_id" "suffix" {
