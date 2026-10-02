@@ -147,7 +147,25 @@ resource "aws_s3_bucket_policy" "main_bucket_policy" {
         }
         Action   = "s3:GetBucketAcl"
         Resource = "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
+      },
+ {
+        Sid: "DenyUnEncryptedTransport"
+        Effect: "Deny"
+        Principal: "*"
+        Action: "s3:*"
+        Resource: [
+          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/*"
+        ]
+        Condition: {
+          Bool: {
+            "aws:SecureTransport": "false"
+          }
+        }
       }
+    ]
+  })
+}
     ]
   })
 }
@@ -170,6 +188,21 @@ resource "aws_s3_bucket_policy" "log_bucket_policy" {
         Condition: {
           StringEquals: {
             "s3:x-amz-acl": "bucket-owner-full-control"
+          }
+        }
+      },
+ {
+        Sid: "DenyUnEncryptedTransport"
+        Effect: "Deny"
+        Principal: "*"
+        Action: "s3:*"
+        Resource: [
+          "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.log_bucket.bucket}/*"
+        ]
+        Condition: {
+          Bool: {
+            "aws:SecureTransport": "false"
           }
         }
       }
